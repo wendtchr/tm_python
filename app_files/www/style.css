@@ -1,0 +1,618 @@
+/* Theme Picker */
+.theme-picker { 
+    margin: 10px; 
+}
+
+.theme-picker-container {
+    position: fixed;
+    top: 50px; /* Adjust if a header exists; else set to 0 */
+    right: 10px;
+    z-index: 1000;
+}
+
+/* Processing Steps */
+.steps { 
+    padding: 10px; 
+}
+
+/* Status */
+.status { 
+    margin: 10px 0;
+    position: relative;
+    z-index: 2;
+}
+
+.status-history {
+    max-height: 200px;
+    overflow-y: auto;
+}
+
+/* Sidebar */
+.sidebar {
+    min-width: 450px !important;
+    max-width: 450px !important;
+    overflow-y: auto;
+    flex-shrink: 0;
+    /* left: 0;
+    top: 0; */
+    z-index: 1000;
+    padding: 10px;
+    background-color: #f8f9fa;
+    border-right: 1px solid #dee2e6;
+    padding-top: 0;
+}
+
+/* Sidebar Content */
+.sidebar > * {
+    width: 100%;
+    margin-bottom: 0.5rem;
+}
+
+.sidebar h4 {
+    padding: 0.25rem 0;
+    margin: 0;
+}
+
+.sidebar .mb-4 {
+    margin-bottom: 0.5rem !important;
+}
+
+/* Main Content */
+.main-content {
+    flex: 1;
+    margin-left: 450px;
+    padding: 1rem 1rem 1rem 1rem;
+    overflow-x: auto;
+    width: calc(100% - 450px);
+    overflow-y: auto;
+    min-height: 100vh;
+    position: relative;
+}
+
+.main-content > * {
+    max-width: 100%;
+}
+
+/* Overall Layout */
+.d-flex {
+    display: flex;
+    width: 100%;
+}
+
+.bslib-gap-spacing {
+    gap: 0.2rem;
+    padding-top: 0 !important;
+}
+
+.shiny-app {
+    display: flex;
+    width: 100%;
+    min-height: 100vh;
+    position: relative;
+}
+
+/* Sidebar Open/Close States */
+body.sidebar-open .main-content {
+    width: calc(100% - 450px); 
+}
+
+body:not(.sidebar-open) .main-content {
+    margin-left: 0;  
+    width: 100%; 
+}
+
+body:not(.sidebar-open) .sidebar {
+    width: 0;
+}
+
+/* Visualization Container */
+.visualization-container {
+    position: relative;
+    width: 100%;
+}
+
+.visualization-frame {
+    width: 100%;
+    height: 600px;
+    border: none;
+}
+
+/* Loading Overlay */
+.loading-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(255, 255, 255, 0.9);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+}
+
+.loading-spinner {
+    width: 50px;
+    height: 50px;
+    border: 5px solid #f3f3f3;
+    border-top: 5px solid #3498db;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+.loading-text {
+    margin-top: 10px;
+    color: #666;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Table Styles */
+.table-container {
+    width: 100%;
+    margin-bottom: 1rem;
+}
+
+.table-responsive-horizontal {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    max-width: 100%;
+    margin-bottom: 1rem;
+    border: 1px solid #dee2e6;
+}
+
+/* Make table header sticky */
+.table-responsive-horizontal thead th {
+    position: sticky;
+    top: 0;
+    background-color: #fff;
+    z-index: 1;
+    border-bottom: 2px solid #dee2e6;
+}
+
+/* Ensure table cells don't wrap */
+.table-responsive-horizontal td,
+.table-responsive-horizontal th {
+    white-space: nowrap;
+    padding: 0.75rem;
+}
+
+/* Add shadow to indicate scrollable content */
+.table-responsive-horizontal::-webkit-scrollbar {
+    height: 8px;
+}
+
+.table-responsive-horizontal::-webkit-scrollbar-track {
+    background: #f1f1f1;
+}
+
+.table-responsive-horizontal::-webkit-scrollbar-thumb {
+    background: #888;
+    border-radius: 4px;
+}
+
+.table-responsive-horizontal::-webkit-scrollbar-thumb:hover {
+    background: #555;
+}
+
+.table {
+    margin-bottom: 0;
+}
+
+.table th {
+    text-align: center;
+}
+
+.table td[data-column="Has Attachment"] {
+    text-align: center;
+    width: 50px;
+    font-size: 0.9em;
+}
+
+.table td {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.table td:hover {
+    white-space: normal;
+    overflow: visible;
+    word-wrap: break-word;
+}
+
+.table td[data-column="Comment"] {
+    width: 60%;
+    min-width: 300px;
+}
+
+.table td:not([data-column="Comment"]) {
+    width: auto;
+    min-width: 100px;
+}
+
+/* Document Info */
+.document-info-wrapper {
+    display: flex;
+    justify-content: flex-end;
+}
+
+.document-info-container {
+    background: transparent;
+
+    padding: 0.5rem 1rem;
+    width: auto;
+
+}
+
+.document-info {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    margin: 0;
+}
+
+.info-item {
+    padding: 0 1rem;
+    white-space: nowrap;
+}
+
+.info-item:first-child {
+    padding-left: 0;
+}
+
+.info-item:last-child {
+    padding-right: 0;
+}
+
+.document-info p {
+    margin: 0;
+    white-space: nowrap;
+}
+
+.document-info .label {
+    font-weight: bold;
+    margin-right: 0.5rem;
+}
+
+/* Header Section */
+.header-section {
+    width: 100%;
+}
+
+/* Tooltip Styling */
+[title], [data-tooltip] {
+    position: relative;
+    cursor: help;
+
+}
+
+/* Seed Topic Input */
+.seed-topics-container {
+    overflow-y: auto;
+    padding-right: 5px;
+}
+
+.seed-topic-input {
+    background-color: #f8f9fa;
+    border: 1px solid #dee2e6;
+    border-radius: 4px;
+    padding: 0.5rem;
+    margin-bottom: 0.5rem;
+}
+
+.seed-topic-input:hover {
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.topic-name-input input {
+    font-weight: 500;
+    font-size: 0.9em;
+    width: 100%;
+}
+
+.topic-keywords-input input {
+    width: 100%;
+    font-size: 0.9em;
+}
+
+.seed-topic-input label {
+    flex: 0 0 80px;
+    margin: 0;
+    font-size: 0.85rem;
+    white-space: nowrap;
+}
+
+.seed-topic-input input {
+    font-size: 0.85rem;
+    padding: 0.25rem 0.5rem;
+    height: auto;
+}
+
+/* Topic header with remove button */
+.seed-topic-input > .d-flex {
+    margin-bottom: 0.25rem;
+    font-size: 0.85rem;
+}
+
+/* Remove button */
+.seed-topic-input .btn-danger {
+    padding: 0.15rem 0.5rem;
+    font-size: 0.75rem;
+    background-color: #ff6d6d !important;
+    border-color: #ff6d6d !important;
+}
+
+/* Hover state for remove button */
+.seed-topic-input .btn-danger:hover {
+    background-color: #ff4646 !important;  /* Darker green on hover */
+    border-color: #ff4646 !important;
+}
+
+/* Add topic button */
+.add-topic-btn {
+    font-size: 0.85rem;
+    padding: 0.25rem;
+    margin-top: 0.5rem;
+}
+
+/* File Input */
+.file-input-container {
+    width: 100%;
+    margin: 0;
+    padding: 0;
+}
+
+.file-input-container input[type="file"] {
+    width: 100%;
+    margin: 0;
+    padding: 0;
+    border: 1px solid #dee2e6;
+    font-size: 1rem;
+    line-height: 1.5;
+    border-radius: 0.25rem;
+}
+
+.file-input-container input[type="file"]::file-selector-button {
+    height: 100%;
+    margin: 0;
+    padding: 4px 8px;
+    border: none;
+    border-radius: 0.2rem;
+}
+
+/* Button Group */
+.button-group {
+    width: 100%;
+    margin: 4px; 
+}
+
+/* File Input Group */
+.input-group {
+    width: 100%;
+    display: flex;
+    padding-bottom: 2px;
+}
+
+.input-group .btn-file {
+    display: inline-block;
+    padding: 6px 12px;
+    background-color: #e9ecef;
+    border: 1px solid #ced4da;
+    border-radius: 4px 0 0 4px;
+    color: #495057;
+    cursor: pointer;
+}
+
+.input-group .form-control {
+    border-radius: 0 4px 4px 0;
+    border-left: none;
+}
+
+/* Overall Container */
+.html-fill-container {
+    display: flex;
+    width: 100%;
+    height: 100vh;
+    overflow: hidden;
+}
+
+.nav-tabs {
+    overflow-y: hidden;
+    max-height: 80vh; /* Example: 80% of viewport height */
+}
+
+/* Model Parameters Section */
+.model-parameters {
+    border-top: 1px solid #dee2e6;
+    /* padding-top: 1rem; */
+}
+
+/* Advanced Options */
+#advanced_options {
+    background-color: #f8f9fa;
+    border-radius: 0.25rem;
+    padding: 1rem;
+    margin-top: 0.5rem;
+}
+
+/* Input Validation Styling */
+.form-control.is-invalid {
+    border-color: #dc3545;
+    padding-right: calc(1.5em + 0.75rem);
+    background-image: url("data:image/svg+xml,...");
+    background-repeat: no-repeat;
+    background-position: right calc(0.375em + 0.1875rem) center;
+    background-size: calc(0.75em + 0.375rem) calc(0.75em + 0.375rem);
+}
+
+/* Improved Spacing for Nested Controls */
+.model-parameters .input-group {
+    margin-bottom: 0.5rem;
+}
+
+/* Better Tooltip Contrast */
+[data-bs-toggle="tooltip"] {
+    color: #6c757d;
+}
+
+/* Ensure sidebar header aligns properly */
+.sidebar h4:first-child {
+    margin-top: 0;
+}
+
+/* Table Styles */
+.data-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.data-table th {
+    position: sticky;
+    top: 0;
+    background: #f8f9fa;
+    z-index: 10;
+    padding: 8px;
+    border-bottom: 2px solid #dee2e6;
+    padding-right: 20px;
+}
+
+.data-table td {
+    padding: 8px;
+    border-bottom: 1px solid #dee2e6;
+    max-width: 0;
+    vertical-align: top;
+    position: relative;
+    cursor: pointer;
+    max-height: 100px;
+    overflow: hidden;
+    transition: max-height 0.3s ease-out;
+    white-space: pre-wrap;
+}
+
+.data-table td.expanded {
+    max-height: none;
+}
+
+.resizer {
+    position: absolute;
+    right: 0;
+    top: 0;
+    height: 100%;
+    width: 4px;
+    background: rgba(0, 0, 0, 0.1);
+    cursor: col-resize;
+    user-select: none;
+}
+
+.resizer:hover,
+.resizer.resizing {
+    background: rgba(0, 0, 0, 0.2);
+}
+
+/* Fix file upload spacing */
+.form-group.shiny-input-container {
+    margin-bottom: 2px !important;
+    padding: 0 !important;
+}
+
+/* Adjust sidebar spacing */
+.sidebar .mb-4 {
+    margin-bottom: 0.5rem !important;
+}
+
+/* Tighten file input container */
+.file-input-container {
+    width: 100%;
+    margin: 0;
+    padding: 0;
+}
+
+/* Adjust file input spacing */
+.file-input-container input[type="file"] {
+    margin: 0;
+    padding: 0;
+    border: 1px solid #dee2e6;
+}
+
+/* Remove extra space from file selector button */
+.file-input-container input[type="file"]::file-selector-button {
+    margin: 0;
+    padding: 4px 8px;
+}
+
+/* Make labels inline */
+.seed-topic-input .form-group {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 0.25rem;
+}
+
+/* Adjust sidebar section padding */
+.sidebar .mb-4 {
+    margin-bottom: 0.5rem !important;
+}
+
+/* Reduce padding in sidebar sections */
+.sidebar h4 {
+    padding: 0.25rem 0;
+    margin: 0;
+}
+
+/* Chunk Settings Panel */
+.chunk-settings {
+    transition: opacity 0.3s ease-in-out;
+    padding: 1rem;
+    border-radius: 0.25rem;
+    background-color: #f8f9fa;
+}
+
+.chunk-settings.hidden {
+    display: none;
+}
+
+/* Switch Styling */
+.form-switch {
+    padding-left: 2.5em;
+}
+
+.form-switch .form-check-input {
+    width: 2em;
+    margin-left: -2.5em;
+    background-size: contain;
+    border-radius: 2em;
+    transition: background-position .15s ease-in-out;
+}
+
+.form-switch .form-check-input:checked {
+    background-position: right center;
+    background-color: #0d6efd;
+}
+
+/* Processing Steps Header with Switch */
+.processing-steps-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.processing-steps-header h4 {
+    margin: 0;
+}
+
+/* Switch alignment */
+.form-switch.d-inline {
+    padding-left: 0;
+    margin-left: auto;
+}
+
+.form-switch.d-inline .form-check-input {
+    margin-left: 0.5rem;
+}

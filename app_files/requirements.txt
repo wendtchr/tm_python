@@ -1,0 +1,25 @@
+aiohttp>=3.8.5
+beautifulsoup4>=4.12.3
+bertopic==0.16.4
+huggingface_hub==0.16.4
+matplotlib>=3.7.2
+nest-asyncio>=1.5.8
+nltk>=3.8.1
+numpy>=2.0.2
+pandas>=2.2.3
+plotly>=5.18.0
+pypdf>=3.15.1
+python-docx>=0.8.11
+sentence-transformers>=2.2.0
+shiny==1.2.1
+shinyswatch==0.8.0
+starlette==0.45.3
+umap-learn>=0.5.3
+wordcloud>=1.9.3
+pyarrow>=14.0.1
+watchfiles==1.0.4
+hdbscan>=0.8.40
+
+# Testing dependencies - only needed for development
+# pytest>=7.0.0
+# pytest-asyncio
