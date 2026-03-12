@@ -26,6 +26,13 @@ from fastapi_app.services.session_service import session_service
 router = APIRouter()
 
 
+def _transition_session_to_error(session_id: str) -> SessionStage:
+    try:
+        return session_service.update_stage(session_id, SessionStage.ERROR).stage
+    except ApiError:
+        return SessionStage.ERROR
+
+
 @router.post("/sessions/{session_id}/upload", response_model=UploadResponse)
 async def upload_data(session_id: str, file: UploadFile = File(...)) -> UploadResponse:
     if not file.filename:
@@ -67,13 +74,14 @@ async def upload_data(session_id: str, file: UploadFile = File(...)) -> UploadRe
         initial_path = _get_output_filename(Path(session.base_dir), "initial")
         df.to_csv(initial_path, index=False)
     except Exception as exc:
+        error_stage = _transition_session_to_error(session_id)
         raise ApiError(
             code="UPLOAD_PROCESSING_ERROR",
             message="Upload processing failed",
             status_code=400,
             details={"reason": str(exc)},
             session_id=session_id,
-            stage=SessionStage.ERROR,
+            stage=error_stage,
         ) from exc
 
     updated = session_service.update_stage(session_id, SessionStage.LOADED)
@@ -119,13 +127,14 @@ async def process_session_attachments(session_id: str) -> AttachmentsProcessResp
         df = read_csv_with_encoding(str(initial_path))
         attached_df = await process_attachments(df, output_dir=base_dir)
     except Exception as exc:
+        error_stage = _transition_session_to_error(session_id)
         raise ApiError(
             code="ATTACHMENTS_PROCESSING_ERROR",
             message="Attachment processing failed",
             status_code=400,
             details={"reason": str(exc)},
             session_id=session_id,
-            stage=SessionStage.ERROR,
+            stage=error_stage,
         ) from exc
 
     updated = session_service.update_stage(session_id, SessionStage.ATTACHMENTS_PROCESSED)
@@ -170,13 +179,14 @@ async def clean_session_data(session_id: str) -> CleanResponse:
         df = read_csv_with_encoding(str(source_path))
         cleaned_df = await clean_data(df, output_dir=base_dir)
     except Exception as exc:
+        error_stage = _transition_session_to_error(session_id)
         raise ApiError(
             code="DATA_CLEANING_ERROR",
             message="Data cleaning failed",
             status_code=400,
             details={"reason": str(exc)},
             session_id=session_id,
-            stage=SessionStage.ERROR,
+            stage=error_stage,
         ) from exc
 
     updated = session_service.update_stage(session_id, SessionStage.CLEANED)

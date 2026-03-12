@@ -51,3 +51,23 @@ class TaskStatusResponse(BaseModel):
     updated_at: datetime
     result: dict[str, Any] | None = None
     error: dict[str, Any] | None = None
+
+
+class ModelSummaryResponse(BaseModel):
+    success: bool
+    session_id: str
+    stage: SessionStage
+    artifact: str
+    row_count: int
+    topic_count: int
+    columns: list[str]
+
+
+class ModelResultsResponse(BaseModel):
+    success: bool
+    session_id: str
+    stage: SessionStage
+    artifact: str
+    row_count: int
+    columns: list[str]
+    rows: list[dict[str, Any]]

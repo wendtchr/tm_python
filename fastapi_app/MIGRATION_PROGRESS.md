@@ -4,7 +4,7 @@ Last updated: 2026-03-12
 
 ## Overall Status
 
-- Current phase: Phase 4 (complete)
+- Current phase: Phase 6 (verification complete, rechecked after Phase 5)
 - Parity mode: enabled
 - Hardening changes: deferred
 
@@ -74,10 +74,37 @@ Completed in this ticket:
 5. Added parity tests covering known key success, unknown key validation errors, and missing artifact not-found behavior
 
 - Phase 5: Thin Parity UI
-Status: not started
+Status: complete
+
+Completed in this ticket:
+
+1. Added thin parity UI at `GET /` backed by `fastapi_app/frontend/index.html`
+2. Implemented minimal end-to-end workflow controls for:
+   - session create/delete
+   - upload, attachments processing, data cleaning
+   - model run + task polling
+   - output file refresh and model summary refresh
+3. Preserved seed-topic editing and defaults in the UI using locked defaults from Shiny config
+4. Added phase-specific UI tests (`tests/fastapi/test_phase5_ui.py`)
 
 - Phase 6: Verification and Cutover
-Status: not started
+Status: complete (verified after Phase 5)
+
+Completed in this ticket:
+
+1. Added missing model contracts:
+   - `GET /api/sessions/{session_id}/model/summary`
+   - `GET /api/sessions/{session_id}/model/results`
+2. Added structured model-results not-found errors (`MODEL_RESULTS_NOT_FOUND`)
+3. Added Phase 6 verification tests for:
+   - model summary/results contract behavior
+   - model failure stage transition to `ERROR`
+   - validation error contract shape
+   - parallel session isolation and session cleanup
+   - API responsiveness while model background task is running
+4. Fixed validation error serialization to guarantee JSON-safe structured payloads
+5. Executed full FastAPI regression suite with all tests passing
+6. Re-ran full FastAPI regression suite after Phase 5 UI implementation
 
 ## API Coverage Snapshot
 
@@ -98,10 +125,8 @@ Implemented:
 13. GET /api/sessions/{session_id}/visualizations/word-scores
 14. GET /api/sessions/{session_id}/visualizations/alignment
 15. GET /api/sessions/{session_id}/downloads/{artifact_name}
-
-Not implemented yet:
-
-1. Model summary/results contracts
+16. GET /api/sessions/{session_id}/model/summary
+17. GET /api/sessions/{session_id}/model/results
 
 ## Verification Log
 
@@ -118,3 +143,7 @@ Not implemented yet:
 9. Result: 11 passed
 10. Added phase 4 visualization/download endpoints and ran: C:/python/python.exe -m pytest tests/fastapi -q
 11. Result: 16 passed
+12. Added phase 6 verification tests and model summary/results endpoints; ran: C:/python/python.exe -m pytest tests/fastapi -q
+13. Result: 22 passed
+14. Added phase 5 thin parity UI with seed topic defaults/editing and ran: C:/python/python.exe -m pytest tests/fastapi -q
+15. Result: 24 passed

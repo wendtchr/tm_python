@@ -1,0 +1,347 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>tm_python FastAPI Parity UI</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 1rem auto; max-width: 1100px; padding: 0 1rem; }
+    h1, h2 { margin: 0.4rem 0; }
+    .row { display: flex; gap: 1rem; flex-wrap: wrap; }
+    .card { border: 1px solid #ccc; border-radius: 6px; padding: 0.8rem; margin: 0.6rem 0; flex: 1 1 440px; }
+    label { display: block; margin-top: 0.5rem; font-weight: 600; }
+    input, textarea, button, select { width: 100%; padding: 0.45rem; margin-top: 0.2rem; box-sizing: border-box; }
+    textarea { min-height: 140px; font-family: Consolas, monospace; }
+    button { cursor: pointer; }
+    .actions { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 0.5rem; margin-top: 0.75rem; }
+    .status { background: #f8f8f8; border: 1px solid #ddd; padding: 0.6rem; border-radius: 6px; white-space: pre-wrap; }
+    .mono { font-family: Consolas, monospace; }
+    .links a { display: block; margin: 0.2rem 0; }
+    .small { color: #666; font-size: 0.9rem; }
+  </style>
+</head>
+<body>
+  <h1>tm_python FastAPI parity workflow</h1>
+  <p class="small">Phase 5 thin UI: create session, upload/process/clean data, run model, poll task status, and open outputs.</p>
+
+  <div class="card">
+    <h2>Session</h2>
+    <div class="actions">
+      <button id="createSessionBtn">Create Session</button>
+      <button id="deleteSessionBtn">Delete Session</button>
+      <button id="refreshFilesBtn">Refresh Files</button>
+      <button id="refreshSummaryBtn">Refresh Model Summary</button>
+    </div>
+    <label for="sessionId">Session ID</label>
+    <input id="sessionId" class="mono" readonly>
+    <label for="sessionStage">Stage</label>
+    <input id="sessionStage" class="mono" readonly>
+  </div>
+
+  <div class="row">
+    <div class="card">
+      <h2>Data workflow</h2>
+      <label for="uploadFile">Upload CSV</label>
+      <input id="uploadFile" type="file" accept=".csv">
+      <div class="actions">
+        <button id="uploadBtn">Upload</button>
+        <button id="attachmentsBtn">Process Attachments</button>
+        <button id="cleanBtn">Clean Data</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Model options</h2>
+      <div class="row">
+        <div style="flex: 1 1 170px;">
+          <label for="minTopicSize">min_topic_size</label>
+          <input id="minTopicSize" type="number">
+        </div>
+        <div style="flex: 1 1 170px;">
+          <label for="topNWords">top_n_words</label>
+          <input id="topNWords" type="number">
+        </div>
+        <div style="flex: 1 1 170px;">
+          <label for="ngramMin">ngram_min</label>
+          <input id="ngramMin" type="number">
+        </div>
+        <div style="flex: 1 1 170px;">
+          <label for="ngramMax">ngram_max</label>
+          <input id="ngramMax" type="number">
+        </div>
+        <div style="flex: 1 1 170px;">
+          <label for="umapNeighbors">umap_n_neighbors</label>
+          <input id="umapNeighbors" type="number">
+        </div>
+        <div style="flex: 1 1 170px;">
+          <label for="umapComponents">umap_n_components</label>
+          <input id="umapComponents" type="number">
+        </div>
+        <div style="flex: 1 1 170px;">
+          <label for="umapMinDist">umap_min_dist</label>
+          <input id="umapMinDist" type="number" step="0.01">
+        </div>
+      </div>
+      <label for="seedTopics">Seed topics (one topic per line, editable)</label>
+      <textarea id="seedTopics"></textarea>
+      <div class="actions">
+        <button id="resetSeedsBtn">Reset Seed Defaults</button>
+        <button id="runModelBtn">Run Topic Modeling</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="card">
+      <h2>Status</h2>
+      <div id="statusBox" class="status">Ready</div>
+    </div>
+    <div class="card">
+      <h2>Outputs</h2>
+      <div class="links" id="outputLinks"></div>
+      <label for="modelSummary">Model summary</label>
+      <textarea id="modelSummary" readonly></textarea>
+    </div>
+  </div>
+
+  <script>
+    const MODEL_DEFAULTS = __MODEL_DEFAULTS_JSON__;
+    const SEED_DEFAULTS = __SEED_TOPICS_JSON__;
+    let currentTaskId = null;
+    let pollTimer = null;
+
+    const sessionIdEl = document.getElementById("sessionId");
+    const sessionStageEl = document.getElementById("sessionStage");
+    const statusBox = document.getElementById("statusBox");
+    const outputLinks = document.getElementById("outputLinks");
+    const modelSummary = document.getElementById("modelSummary");
+    const seedTopicsEl = document.getElementById("seedTopics");
+
+    function setStatus(message) {
+      statusBox.textContent = message;
+    }
+
+    function setSession(sessionId, stage) {
+      sessionIdEl.value = sessionId || "";
+      sessionStageEl.value = stage || "";
+    }
+
+    function requireSession() {
+      const sessionId = sessionIdEl.value.trim();
+      if (!sessionId) {
+        throw new Error("Create a session first.");
+      }
+      return sessionId;
+    }
+
+    function collectModelRequest() {
+      const seedLines = seedTopicsEl.value.split("\n").map(x => x.trim()).filter(Boolean);
+      return {
+        min_topic_size: Number(document.getElementById("minTopicSize").value),
+        ngram_min: Number(document.getElementById("ngramMin").value),
+        ngram_max: Number(document.getElementById("ngramMax").value),
+        top_n_words: Number(document.getElementById("topNWords").value),
+        umap_n_neighbors: Number(document.getElementById("umapNeighbors").value),
+        umap_n_components: Number(document.getElementById("umapComponents").value),
+        umap_min_dist: Number(document.getElementById("umapMinDist").value),
+        enable_chunking: false,
+        similarity_threshold: MODEL_DEFAULTS.similarity_threshold,
+        min_chunk_length: MODEL_DEFAULTS.min_chunk_length,
+        max_chunk_length: MODEL_DEFAULTS.max_chunk_length,
+        seed_topics: seedLines.length ? seedLines : null
+      };
+    }
+
+    async function api(method, url, body, isFormData) {
+      const options = { method, headers: {} };
+      if (body) {
+        if (isFormData) {
+          options.body = body;
+        } else {
+          options.headers["Content-Type"] = "application/json";
+          options.body = JSON.stringify(body);
+        }
+      }
+      const response = await fetch(url, options);
+      const payload = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        const err = payload.error || {};
+        throw new Error(`${response.status} ${err.code || "ERROR"}: ${err.message || "Request failed"}`);
+      }
+      return payload;
+    }
+
+    function buildOutputLinks(sessionId) {
+      const links = [
+        ["/visualizations/topic", "Topic Visualization"],
+        ["/visualizations/hierarchy", "Topic Hierarchy"],
+        ["/visualizations/wordcloud", "Wordcloud"],
+        ["/visualizations/word-scores", "Word Scores"],
+        ["/visualizations/alignment", "Alignment"],
+        ["/downloads/df_topics", "Download df_topics.csv"],
+        ["/downloads/topic_comparison", "Download topic_comparison.csv"]
+      ];
+      outputLinks.innerHTML = links
+        .map(([path, label]) => `<a href="/api/sessions/${sessionId}${path}" target="_blank" rel="noopener">${label}</a>`)
+        .join("");
+    }
+
+    async function refreshFiles() {
+      const sessionId = requireSession();
+      const payload = await api("GET", `/api/sessions/${sessionId}/files`);
+      setSession(sessionId, payload.stage);
+      const lines = payload.files.map(x => `${x.relative_path} (${x.size_bytes} bytes)`);
+      setStatus(`Files:\n${lines.join("\n") || "(none)"}`);
+    }
+
+    async function refreshSummary() {
+      const sessionId = requireSession();
+      const summary = await api("GET", `/api/sessions/${sessionId}/model/summary`);
+      modelSummary.value = JSON.stringify(summary, null, 2);
+      setSession(sessionId, summary.stage);
+    }
+
+    function stopPolling() {
+      if (pollTimer) {
+        clearInterval(pollTimer);
+        pollTimer = null;
+      }
+    }
+
+    function startPolling(sessionId, taskId) {
+      stopPolling();
+      pollTimer = setInterval(async () => {
+        try {
+          const payload = await api("GET", `/api/sessions/${sessionId}/tasks/${taskId}`);
+          setSession(sessionId, payload.stage);
+          setStatus(`Task ${taskId}: ${payload.status} (${payload.progress}%)\n${payload.message}`);
+          if (payload.status === "succeeded" || payload.status === "failed") {
+            stopPolling();
+            if (payload.status === "succeeded") {
+              await refreshFiles();
+            }
+          }
+        } catch (error) {
+          stopPolling();
+          setStatus(error.message);
+        }
+      }, 800);
+    }
+
+    function applyDefaults() {
+      document.getElementById("minTopicSize").value = MODEL_DEFAULTS.min_topic_size;
+      document.getElementById("ngramMin").value = MODEL_DEFAULTS.ngram_min;
+      document.getElementById("ngramMax").value = MODEL_DEFAULTS.ngram_max;
+      document.getElementById("topNWords").value = MODEL_DEFAULTS.top_n_words;
+      document.getElementById("umapNeighbors").value = MODEL_DEFAULTS.umap_n_neighbors;
+      document.getElementById("umapComponents").value = MODEL_DEFAULTS.umap_n_components;
+      document.getElementById("umapMinDist").value = MODEL_DEFAULTS.umap_min_dist;
+      seedTopicsEl.value = SEED_DEFAULTS.join("\n");
+    }
+
+    document.getElementById("createSessionBtn").addEventListener("click", async () => {
+      try {
+        const payload = await api("POST", "/api/sessions");
+        setSession(payload.session_id, payload.stage);
+        buildOutputLinks(payload.session_id);
+        setStatus(`Session created: ${payload.session_id}`);
+        modelSummary.value = "";
+      } catch (error) {
+        setStatus(error.message);
+      }
+    });
+
+    document.getElementById("deleteSessionBtn").addEventListener("click", async () => {
+      try {
+        const sessionId = requireSession();
+        const payload = await api("DELETE", `/api/sessions/${sessionId}`);
+        stopPolling();
+        setStatus(`Session deleted: ${sessionId} (deleted=${payload.deleted})`);
+        setSession("", payload.stage);
+        outputLinks.innerHTML = "";
+        modelSummary.value = "";
+      } catch (error) {
+        setStatus(error.message);
+      }
+    });
+
+    document.getElementById("uploadBtn").addEventListener("click", async () => {
+      try {
+        const sessionId = requireSession();
+        const fileInput = document.getElementById("uploadFile");
+        if (!fileInput.files || !fileInput.files[0]) {
+          throw new Error("Choose a CSV file to upload.");
+        }
+        const form = new FormData();
+        form.append("file", fileInput.files[0]);
+        const payload = await api("POST", `/api/sessions/${sessionId}/upload`, form, true);
+        setSession(sessionId, payload.stage);
+        setStatus(`Uploaded ${payload.artifact} (${payload.row_count} rows).`);
+        await refreshFiles();
+      } catch (error) {
+        setStatus(error.message);
+      }
+    });
+
+    document.getElementById("attachmentsBtn").addEventListener("click", async () => {
+      try {
+        const sessionId = requireSession();
+        const payload = await api("POST", `/api/sessions/${sessionId}/attachments/process`);
+        setSession(sessionId, payload.stage);
+        setStatus(`Attachments processed: ${payload.artifact} (${payload.row_count} rows).`);
+        await refreshFiles();
+      } catch (error) {
+        setStatus(error.message);
+      }
+    });
+
+    document.getElementById("cleanBtn").addEventListener("click", async () => {
+      try {
+        const sessionId = requireSession();
+        const payload = await api("POST", `/api/sessions/${sessionId}/clean`);
+        setSession(sessionId, payload.stage);
+        setStatus(`Data cleaned: ${payload.artifact} (${payload.row_count} rows).`);
+        await refreshFiles();
+      } catch (error) {
+        setStatus(error.message);
+      }
+    });
+
+    document.getElementById("runModelBtn").addEventListener("click", async () => {
+      try {
+        const sessionId = requireSession();
+        const payload = await api("POST", `/api/sessions/${sessionId}/model/run`, collectModelRequest());
+        currentTaskId = payload.task_id;
+        setSession(sessionId, payload.stage);
+        setStatus(`Modeling queued with task ${currentTaskId}.`);
+        startPolling(sessionId, currentTaskId);
+      } catch (error) {
+        setStatus(error.message);
+      }
+    });
+
+    document.getElementById("refreshFilesBtn").addEventListener("click", async () => {
+      try {
+        await refreshFiles();
+      } catch (error) {
+        setStatus(error.message);
+      }
+    });
+
+    document.getElementById("refreshSummaryBtn").addEventListener("click", async () => {
+      try {
+        await refreshSummary();
+      } catch (error) {
+        setStatus(error.message);
+      }
+    });
+
+    document.getElementById("resetSeedsBtn").addEventListener("click", () => {
+      seedTopicsEl.value = SEED_DEFAULTS.join("\n");
+      setStatus("Seed topic defaults restored.");
+    });
+
+    applyDefaults();
+  </script>
+</body>
+</html>

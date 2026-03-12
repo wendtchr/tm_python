@@ -151,6 +151,46 @@ class ModelingService:
             "visualizations": sorted([str(p.name) for p in output.get("visualizations", {}).values() if p.exists()]),
         }
 
+    def get_model_summary(self, session_id: str) -> dict[str, Any]:
+        session = session_service.get_session(session_id)
+        topics_path, df = self._load_topics_dataframe(session.base_dir, session_id, session.stage)
+        topic_count = int(df["Topic"].nunique()) if "Topic" in df.columns else 0
+        return {
+            "session_id": session_id,
+            "stage": session.stage,
+            "artifact": topics_path.name,
+            "row_count": len(df),
+            "topic_count": topic_count,
+            "columns": [str(col) for col in df.columns],
+        }
+
+    def get_model_results(self, session_id: str) -> dict[str, Any]:
+        session = session_service.get_session(session_id)
+        topics_path, df = self._load_topics_dataframe(session.base_dir, session_id, session.stage)
+        return {
+            "session_id": session_id,
+            "stage": session.stage,
+            "artifact": topics_path.name,
+            "row_count": len(df),
+            "columns": [str(col) for col in df.columns],
+            "rows": df.to_dict(orient="records"),
+        }
+
+    @staticmethod
+    def _load_topics_dataframe(base_dir: str, session_id: str, stage: SessionStage) -> tuple[Path, Any]:
+        topics_path = Path(base_dir) / shiny_config.TOPIC_OUTPUT_CONFIG["DEFAULT_FILENAME"]
+        if not topics_path.exists():
+            raise ApiError(
+                code="MODEL_RESULTS_NOT_FOUND",
+                message="Model results are not available for this session",
+                status_code=404,
+                details={"expected": topics_path.name},
+                session_id=session_id,
+                stage=stage,
+            )
+        df = read_csv_with_encoding(str(topics_path))
+        return topics_path, df
+
     @staticmethod
     def _resolve_source_path(base_dir: Path) -> Path | None:
         cleaned = _get_output_filename(base_dir, "cleaned")

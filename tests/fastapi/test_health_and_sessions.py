@@ -5,6 +5,7 @@ from pathlib import Path
 
 from fastapi.testclient import TestClient
 
+import fastapi_app.api.routers.data as data_router
 from fastapi_app.main import app
 
 
@@ -102,6 +103,8 @@ def test_upload_missing_required_comment_column_returns_structured_error(tmp_pat
     assert body["code"] == "UPLOAD_PROCESSING_ERROR"
     assert body["session_id"] == session_id
     assert "Missing required columns" in body["details"]["reason"]
+    session_json = json.loads((tmp_path / session_id / "session.json").read_text(encoding="utf-8"))
+    assert session_json["stage"] == "ERROR"
 
 
 def test_files_endpoint_lists_session_artifacts(tmp_path: Path, monkeypatch) -> None:
@@ -177,3 +180,30 @@ def test_clean_sets_stage_and_writes_clean_artifact(tmp_path: Path, monkeypatch)
 
     session_json = json.loads((tmp_path / session_id / "session.json").read_text(encoding="utf-8"))
     assert session_json["stage"] == "CLEANED"
+
+
+def test_clean_failure_transitions_session_to_error(tmp_path: Path, monkeypatch) -> None:
+    monkeypatch.setenv("TM_OUTPUT_BASE_DIR", str(tmp_path))
+    client = TestClient(app)
+
+    session_id = client.post("/api/sessions").json()["session_id"]
+    payload = "Comment\nhello world\n"
+    upload_response = client.post(
+        f"/api/sessions/{session_id}/upload",
+        files={"file": ("input.csv", payload, "text/csv")},
+    )
+    assert upload_response.status_code == 200
+
+    async def _fail_clean(*args, **kwargs):
+        raise RuntimeError("clean boom")
+
+    monkeypatch.setattr(data_router, "clean_data", _fail_clean)
+
+    clean_response = client.post(f"/api/sessions/{session_id}/clean")
+    assert clean_response.status_code == 400
+    body = clean_response.json()["error"]
+    assert body["code"] == "DATA_CLEANING_ERROR"
+    assert body["session_id"] == session_id
+
+    session_json = json.loads((tmp_path / session_id / "session.json").read_text(encoding="utf-8"))
+    assert session_json["stage"] == "ERROR"
