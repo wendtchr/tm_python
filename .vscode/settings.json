@@ -20,6 +20,9 @@
         "chat-editing-text-model:**/*.md": "default",
         "chat-editing-text-model:**/*.markdown": "default",
         "chat-editing-text-model:**/*.mdx": "default",
-        "chat-editing-text-model:**/*.mdc": "default"
-    }
+        "chat-editing-text-model:**/*.mdc": "default",
+        "\\c:\\Users\\wendt\\OneDrive - CDC\\Dev\\tm_python\\conversion_plan_unified.md": "default",
+        "/c:/Users/wendt/OneDrive - CDC/Dev/tm_python/conversion_plan_unified.md": "default"
+    },
+    "python-envs.defaultEnvManager": "ms-python.python:system"
 }
