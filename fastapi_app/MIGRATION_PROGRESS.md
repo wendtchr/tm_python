@@ -4,7 +4,7 @@ Last updated: 2026-03-12
 
 ## Overall Status
 
-- Current phase: Phase 3 (complete)
+- Current phase: Phase 4 (complete)
 - Parity mode: enabled
 - Hardening changes: deferred
 
@@ -57,7 +57,21 @@ Completed in this ticket:
 7. Added phase-specific tests for enqueue, polling success, duplicate conflict, and task-not-found behavior
 
 - Phase 4: Visualization and Downloads
-Status: not started
+Status: complete
+
+Completed in this ticket:
+
+1. Added read-only visualization endpoints:
+   - `GET /api/sessions/{session_id}/visualizations/topic`
+   - `GET /api/sessions/{session_id}/visualizations/hierarchy`
+   - `GET /api/sessions/{session_id}/visualizations/wordcloud`
+   - `GET /api/sessions/{session_id}/visualizations/word-scores`
+   - `GET /api/sessions/{session_id}/visualizations/alignment`
+2. Added key-based download endpoint:
+   - `GET /api/sessions/{session_id}/downloads/{artifact_name}`
+3. Added artifact registry with session-scoped safe-path resolution and known-key mapping
+4. Added topic-comparison artifact exposure when available (`topic_comparison/*`)
+5. Added parity tests covering known key success, unknown key validation errors, and missing artifact not-found behavior
 
 - Phase 5: Thin Parity UI
 Status: not started
@@ -78,11 +92,16 @@ Implemented:
 7. POST /api/sessions/{session_id}/clean
 8. POST /api/sessions/{session_id}/model/run
 9. GET /api/sessions/{session_id}/tasks/{task_id}
+10. GET /api/sessions/{session_id}/visualizations/topic
+11. GET /api/sessions/{session_id}/visualizations/hierarchy
+12. GET /api/sessions/{session_id}/visualizations/wordcloud
+13. GET /api/sessions/{session_id}/visualizations/word-scores
+14. GET /api/sessions/{session_id}/visualizations/alignment
+15. GET /api/sessions/{session_id}/downloads/{artifact_name}
 
 Not implemented yet:
 
 1. Model summary/results contracts
-2. Visualizations and downloads contracts
 
 ## Verification Log
 
@@ -97,3 +116,5 @@ Not implemented yet:
 7. Result: 8 passed
 8. Added phase 3 endpoints/services and ran: C:/python/python.exe -m pytest tests/fastapi -q
 9. Result: 11 passed
+10. Added phase 4 visualization/download endpoints and ran: C:/python/python.exe -m pytest tests/fastapi -q
+11. Result: 16 passed

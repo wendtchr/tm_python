@@ -4,7 +4,7 @@ from fastapi import FastAPI, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 
-from fastapi_app.api.routers import data, health, model, sessions, tasks
+from fastapi_app.api.routers import data, downloads, health, model, sessions, tasks, visualizations
 from fastapi_app.core.errors import ApiError
 
 app = FastAPI(title="tm_python FastAPI Parity API", version="0.1.0")
@@ -14,6 +14,8 @@ app.include_router(sessions.router, prefix="/api", tags=["sessions"])
 app.include_router(data.router, prefix="/api", tags=["data"])
 app.include_router(model.router, prefix="/api", tags=["model"])
 app.include_router(tasks.router, prefix="/api", tags=["tasks"])
+app.include_router(visualizations.router, prefix="/api", tags=["visualizations"])
+app.include_router(downloads.router, prefix="/api", tags=["downloads"])
 
 
 @app.exception_handler(ApiError)
